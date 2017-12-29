@@ -98,7 +98,7 @@ class SN(object):
         self.save_to_mongo(goods_li)
 
     def collect_comment(self,pid,response):
-
+        '''收集商品评价'''
         comment_li = re.findall(r'"content":"(.*?)","publishTime":"(.*?)".*?"sourceSystem":"(.*?)".*?"nickName":"(.*?)".*?"qualityStar":(\d+)',response)
         item_li = []
         for comment in comment_li:
@@ -114,6 +114,7 @@ class SN(object):
         # self.save_to_mongo(item_li)
 
     def save_to_mongo(self,goods_li):
+        '''保存到mongo'''
         try:
             self.collection.insert(goods_li)
             print('successful')
@@ -152,6 +153,7 @@ class SN(object):
                     # self.collect_data(html,pid)
 
     def start_comment(self):
+        '''开始获取评价'''
         conn = MongoClient(host='127.0.0.1',port=27017)
         db = conn.Items
         arry = db.sn_item.find()
