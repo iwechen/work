@@ -3,14 +3,22 @@ import requests
 from lxml import etree
 import re
 import json
+from pymongo import MongoClient
 import gevent
 from gevent import monkey
 monkey.patch_all()
+import multiprocessing
+import time
 
 class SN(object):
     def __init__(self):
         self.headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3236.0 Safari/537.36"}
- 
+        # 创建mongo数据库连接
+        self.client = MongoClient(host = "127.0.0.1", port = 27017)
+        # 创建数据库和集合
+        self.db = self.client["Items"]
+        self.collection = self.db["sn_item"]
+
     def send_request(self,url):
         '''发起请求,返回页面html信息'''
         response = requests.get(url = url,headers = self.headers).content.decode('utf-8')
@@ -66,25 +74,53 @@ class SN(object):
 
     def collect_data(self,html,pid):
         '''构建收集数据'''
+        goods_li = []
+        goods_dict = {}
         html = re.sub(r'60x60','800x800',html)
         html = etree.HTML(html)
-        goods_dict = {}
-        # goods_dict['pid'] = pid
-        # goods_dict['link'] = 'http://product.suning.com/0010128947/'+str(pid)+'.html'
-        # cate = html.xpath('//div[@class="breadcrumb"]')[0]
-        # goods_dict['category'] = cate.xpath('./a/text()')[0]+'>'+cate.xpath('./div[1]/span/a/text()')[0]+'>'+cate.xpath('./div[2]/span/a/text()')[0]+'>'+cate.xpath('./div[3]/span/a/text()')[0]+'>'+cate.xpath('./span/a/text()')[0]
-        # goods_dict['title'] = html.xpath('//div[@class="proinfo-title"]/h1/text()')[1].strip()
-        # goods_dict['price'] = self.send_price(pid)
-        # goods_dict['package'] = html.xpath('//ul[@class="cnt clearfix"]/li/text()')
-        # goods_dict['shop_id'] = '苏宁自营'
-        # goods_dict['comment_tags'] = self.send_comment_tags(pid)
-        # goods_dict['recommendation'] = {'看了最终买了':self.send_rec_view_buy(pid),'热销推荐':self.send_rec_hot(pid)}
-        # goods_dict['comment_cnt'] = self.comment_cnt(pid)
-        # goods_dict['desc'] = html.xpath('//div[@id="productDetail"]/p[2]')[0][0]
+        goods_dict['pid'] = pid
+        goods_dict['link'] = 'http://product.suning.com/0010128947/'+str(pid)+'.html'
+        cate = html.xpath('//div[@class="breadcrumb"]')[0]
+        goods_dict['category'] = cate.xpath('./a/text()')[0]+'>'+cate.xpath('./div[1]/span/a/text()')[0]+'>'+cate.xpath('./div[2]/span/a/text()')[0]+'>'+cate.xpath('./div[3]/span/a/text()')[0]+'>'+cate.xpath('./span/a/text()')[0]
+        goods_dict['title'] = html.xpath('//div[@class="proinfo-title"]/h1/text()')[1].strip()
+        goods_dict['price'] = self.send_price(pid)
+        goods_dict['package'] = html.xpath('//ul[@class="cnt clearfix"]/li/text()')
+        goods_dict['shop_id'] = '苏宁自营'
+        goods_dict['comment_tags'] = self.send_comment_tags(pid)
+        goods_dict['recommendation'] = {'看了最终买了':self.send_rec_view_buy(pid),'热销推荐':self.send_rec_hot(pid)}
+        goods_dict['comment_cnt'] = self.comment_cnt(pid)
         goods_dict['image_list'] = html.xpath('//div[@class="imgzoom-thumb-main"]/ul/li/a/img/@src')
-        
-        print(goods_dict)
+        goods_dict['desc'] = etree.tostring(html.xpath('//*[@id="productDetail"]/p[2]')[0]).decode('utf-8')
 
+        print(goods_dict['category'])
+        goods_li.append(goods_dict)
+
+        self.save_to_mongo(goods_li)
+
+    def collect_comment(self,pid,response):
+
+        comment_li = re.findall(r'"content":"(.*?)","publishTime":"(.*?)".*?"sourceSystem":"(.*?)".*?"nickName":"(.*?)".*?"qualityStar":(\d+)',response)
+        item_li = []
+        for comment in comment_li:
+            comment_dict = {}
+            comment_dict['pid'] = pid
+            comment_dict['content'] = comment[0]
+            comment_dict['publishTime'] = comment[1]
+            comment_dict['sourceSystem'] = comment[2]
+            comment_dict['nickName'] = comment[3]
+            comment_dict['qualityStar'] = comment[4]
+            item_li.append(comment_dict)
+        print(item_li)
+        # self.save_to_mongo(item_li)
+
+    def save_to_mongo(self,goods_li):
+        try:
+            self.collection.insert(goods_li)
+            print('successful')
+        except:
+            print(goods_li)
+            print('default')
+            time.sleep(5)
 
     def start_work(self):
         '''开始发送请求'''
@@ -106,32 +142,42 @@ class SN(object):
                 page += 1
                 # 获得详情页请求链接
                 detail_url_li = self.collect_detail_url(response)
-                for url in detail_url_li[:1]:
+                for url in detail_url_li:
                     url = 'http:' + url
                     pid = re.search(r'/(\d+)\.html',url).group(1)
                     html = self.send_request(url)
                     # 构建收集数据
-                    # g1 = gevent.spawn(self.collect_data,html,pid)
-                    # g1.join()
-                    self.collect_data(html,pid)
+                    g1 = gevent.spawn(self.collect_data,html,pid)
+                    g1.join()
+                    # self.collect_data(html,pid)
+
+    def start_comment(self):
+        conn = MongoClient(host='127.0.0.1',port=27017)
+        db = conn.Items
+        arry = db.sn_item.find()
+        for pid in arry:
+            pid = pid['pid']
+            page = 1
+            while True:
+                url = 'https://review.suning.com/ajax/review_lists/general-000000000'+pid+'-0010128947-total-'+str(page)+'-default-10-----reviewList.htm'
+                response = self.send_request(url)
+                print(len(response))
+                if len(response) < 100 or len(response)==38208:
+                    break
+                print('第%d页'%page)
+                page += 1
+
+                self.collect_comment(pid,response)
 
     def main(self):
+        # 开始获取商品
         url_li = self.start_work()
+        p = multiprocessing.Process(target = self.start_detail_url,args = (url_li,))
+        p.start()
+        # 开始获取评论
 
-        self.start_detail_url(url_li)
-
+        # self.start_comment()
 
 if __name__ == '__main__':
     sn = SN()
     sn.main()
-
-
-
-
-
-
-
-
-
-
-
