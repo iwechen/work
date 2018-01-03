@@ -33,20 +33,20 @@ class MSJ_Spider(object):
     def collect_food_menu(self,response):
         food_dict = {}
         html = etree.HTML(response)
-        # food_dict['title'] = html.xpath('//h1[@class="title"]/a/text()')[0]
-        # food_dict['category'] = re.search(r'#(.*)#',html.xpath('//ul[@class="pathstlye1"]')[0].xpath('string(.)')).group(1)
-        # food_dict['tags'] = [i[0].xpath('string(.)') for i in html.xpath('//div[@class="info1"]/dl/dt')]
-        # food_dict['time'] = [i.xpath('string(.)') for i in html.xpath('//div[@class="info2"]/ul/li')]
-        # food_dict['desc'] = html.xpath('//div[@class="materials"]/p/text()')[0]
-        # 主料
+        food_dict['title'] = html.xpath('//h1[@class="title"]/a/text()')[0]
+        food_dict['category'] = re.search(r'#(.*)#',html.xpath('//ul[@class="pathstlye1"]')[0].xpath('string(.)')).group(1)
+        food_dict['tags'] = [i[0].xpath('string(.)') for i in html.xpath('//div[@class="info1"]/dl/dt')]
+        food_dict['time'] = [i.xpath('string(.)') for i in html.xpath('//div[@class="info2"]/ul/li')]
+        food_dict['desc'] = html.xpath('//div[@class="materials"]/p/text()')[0]
+        # # 主料
         main_sea = dict(zip([i.xpath('string(.)') for i in html.xpath('//div[@class="materials_box"]/div[1]/ul/li/div/h4/a')],[i.xpath('string(.)') for i in html.xpath('//div[@class="materials_box"]/div[1]/ul/li/div/h4/span')]))
-        # 辅料
+        # # 辅料
         assist_sea = dict(zip([i.xpath('string(.)') for i in html.xpath('//div[@class="materials_box"]/div[2]/ul/li/h4/a')],[i.xpath('string(.)') for i in html.xpath('//div[@class="materials_box"]/div[2]/ul/li/span')]))
         food_dict['sessioning'] = {'主料':main_sea,'辅料':assist_sea}
-
-        
-
-        
+        food_dict['link'] = html.xpath('//div[@class="cp_headerimg_w"]/img/@src')[0]
+        food_dict['method'] = [i.xpath('string(.)') for i in html.xpath('//div[@class="editnew edit"]/div/div/p[1]')]
+        food_dict['method_img'] = html.xpath('//div[@class="editnew edit"]/div/div/p[2]/img/@src')
+        food_dict['method_img'] = html.xpath('//div[@class="editnew edit"]/div/div/p[2]/img/@src')
 
         print(food_dict)
         # print(a)
@@ -93,22 +93,4 @@ class MSJ_Spider(object):
 if __name__ == '__main__':
     msj = MSJ_Spider()
     msj.main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
