@@ -49,7 +49,7 @@ class MSJ_Spider(object):
         food_dict['method_img'] = html.xpath('//div[@class="editnew edit"]/div/div/p[2]/img/@src')
 
         print(food_dict)
-        # print(a)
+        return food_dict
 
     def start_food(self,food_url):
         for url in food_url:
