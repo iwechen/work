@@ -4,13 +4,12 @@ from lxml import etree
 import time
 import pymongo
 import gevent
-# from multiprocessing import Process
 import multiprocessing
 from gevent import monkey
 monkey.patch_all()
 
 class MSJ_Spider(object):
-    '''美食杰爬虫项目'''
+    '''美食杰菜单爬虫项目'''
     def __init__(self):
         self.headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3236.0 Safari/537.36"}
         

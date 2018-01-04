@@ -1,7 +1,6 @@
 #-*- coding:utf-8 -*-  
 from gevent import monkey
 monkey.patch_all()
-
 import requests
 import time
 import hashlib 
@@ -12,6 +11,7 @@ import csv
 import pymongo
 
 class YH(object):
+    '''永辉超市全站数据'''
     def __init__(self):
         self.headers = {'User-Agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1'}
         self.access_token = 'YH601933yCzc'

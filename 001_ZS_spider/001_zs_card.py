@@ -7,6 +7,7 @@ import re
 import pymongo
 
 class ZhaoCard(object):
+    '''招商银行信用卡数据'''
     def __init__(self):
         self.card_list = []
         self.headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3236.0 Safari/537.36"}

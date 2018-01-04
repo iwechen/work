@@ -11,6 +11,7 @@ import multiprocessing
 import time
 
 class SN(object):
+    '''苏宁易购生鲜数据'''
     def __init__(self):
         self.headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3236.0 Safari/537.36"}
         # 创建mongo数据库连接
