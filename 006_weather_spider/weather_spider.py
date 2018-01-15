@@ -31,14 +31,14 @@ class Weather_Spider(object):
             pro_dict = {}
             pro_name = pro.xpath('./dt/a/b/text()')[0]
             city_url = pro.xpath('./dd/a/@href')
-            # print(city_url)
             pro_dict[pro_name] = city_url
-            # 3.添加到列表
+            # 组建省份数据
+            # [{'北京': ['/lishi/beijing.html','/lishi/beijing.html']},...]
             pro_li.append(pro_dict)
-        # print(pro_li)
         return pro_li
 
     def collect_month(self,response):
+        '''收集当前月份天气数据'''
         weather_li = []
         html = etree.HTML(response)
         day_ele = html.xpath('//div[@class="hd"]/div[@class="wdetail"]/table')[0]
@@ -57,22 +57,21 @@ class Weather_Spider(object):
             weather_dict['pro'] = self.pro_name
             weather_dict['city'] = city_name
             weather_li.append(weather_dict)
-
             print("%s-%s-%s"%(self.pro_name,city_name,date_li[i]))
-        self.save_to_mongo(weather_li)
+        # 存库
+        # self.save_to_mongo(weather_li)
             
     def save_to_mongo(self,weather_li):
+        '''数据存储mongo'''
         try:
             self.collection.insert(weather_li)
             print('successful')
         except:
             print('default')
 
-
     def start_month(self,month_url):
-        # 月分页面
+        '''开始月分页面'''
         response = self.send_request(month_url)
-        # time.sleep(1)
         self.collect_month(response)
 
     def start_city(self,pro_li):
@@ -82,21 +81,24 @@ class Weather_Spider(object):
             # {'陕西': ['/lishi/beijing.html','/lishi/beijing.html']}
             for pro_name,city_li in pro.items():
                 self.pro_name = pro_name
-                ['/lishi/beijing.html','/lishi/beijing.html']
+                # ['/lishi/beijing.html','/lishi/beijing.html']
                 for city_url in city_li:
                     url = self.url+city_url
-                    # print(url)
                     response = self.send_request(url)
-                    # self.collect_year(response)
                     html = etree.HTML(response)
                     year_li_ele = html.xpath('//div[@class="wdetail"]/div[@class="box pcity"]')
-                    for month_li_ele in year_li_ele[6:]:
+                    for month_li_ele in year_li_ele:
                         month_li = month_li_ele.xpath('./ul/li/a/@href')
                         for month in month_li:
-                            if len(month) <= 30:
+                            # 1.判断链接完整性
+                            if re.match(r'^/lishi*',month) == None:
                                 month = '/lishi/' + month
+                            # 拼接月份url链接
                             month_url = self.url + month
+                            print(month_url)
+                            # 1,单线程
                             # self.start_month(month_url)
+                            # 2.协程
                             g1 = gevent.spawn(self.start_month,month_url)
                             g1.join()
 
@@ -107,17 +109,9 @@ class Weather_Spider(object):
         pro_li = self.collect_pro(response)
         self.start_city(pro_li)
 
-
     def main(self):
         self.start_work()
-
 
 if __name__ == '__main__':
     wea = Weather_Spider()
     wea.main()
-
-
-
-
-
-
