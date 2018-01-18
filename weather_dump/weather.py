@@ -8,13 +8,13 @@ from datetime import datetime
 conn = pymongo.MongoClient()
 db = conn['Items']
 
-all_data = db.weather_item.find({'date': {'$gt': datetime(2017, 9, 1)}})
-
+# all_data = db.weather_item.find({'date': {'$gt': datetime(2015, 1, 1)}})
+all_data = db.weather_item.find({})
 weather_name_map = json.load(open('weather_type.json', 'r'))
 
 
 def dump():
-    with open('20170901-.txt', 'w') as F:
+    with open('all.txt', 'w') as F:
         for data in all_data:
             try:
                 date = data['date'].strftime('%Y%m%d')
