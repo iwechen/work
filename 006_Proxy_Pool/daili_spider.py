@@ -22,25 +22,25 @@ class Proxy_Spider(object):
         '''获取代理'''
         # 获取页码范围
         i = 0
-        for page in range(0,2000):
+        for page in range(0,20):
             print('第%d页'%page)
             flag = True
             while flag:
 
-                gip_li = [gip for gip in self.collection.find({'count':2})]
+                gip_li = [gip for gip in self.collection.find({'count':3})]
 
                 if i > len(gip_li)-1:
                     i = 0
 
                 pro_host = gip_li[i]['ip']
-                print(pro_host)
+                # print(pro_host)
                 proxies = { "http":pro_host}
                 url = 'https://proxy.coderbusy.com/classical/anonymous-type/highanonymous.aspx?page=' + str(page)
                 # url = 'http://www.bugng.com/'
                 # url = 'https://proxy.mimvp.com/free.php?proxy=in_tp&sort=&page='+str(page)
                 try:
                     response = requests.get(url = url, proxies = proxies, headers = self.headers).content.decode('utf-8')
-                    print(response)
+                    # print(response)
                 except:
                     flag = True
                     i+=1
@@ -49,7 +49,7 @@ class Proxy_Spider(object):
                     flag = False
                 i+=1
                 ip_list = re.findall("(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*?(\d{2,6})", response, re.S)
-                print(ip_list)
+                # print(ip_list)
                 
                 ip_li = [] 
                 for ip_tup in ip_list:
@@ -57,9 +57,9 @@ class Proxy_Spider(object):
                     ip = ip_tup[0] + ':' + ip_tup[1]
                     mip = [mip for mip in self.collection.find({'ip':ip})]
                     if len(mip) != 0:
-                        print('ip:%s已经存在!'%ip)
+                        # print('ip:%s已经存在!'%ip)
                         continue
-                    print(ip)
+                    # print(ip)
                     ip_dict['ip'] = ip
                     ip_dict['count'] = 0
                     ip_li.append(ip_dict)
@@ -76,14 +76,8 @@ class Proxy_Spider(object):
         except:
             print('default!')
         
-    def check_proxy(self):
-        '''验证代理'''
-
-        pass
-
     def main(self):
         self.spider_proxy()
-        # self.check_proxy()
 
 if __name__ == '__main__':
     proxy = Proxy_Spider()
