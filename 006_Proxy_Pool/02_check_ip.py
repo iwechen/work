@@ -76,8 +76,8 @@ class Check_Ip(object):
         print('开始验证！')
 
 
-    def output(self):
-        ip_list = 
+    # def output(self):
+    #     ip_list = 
 
     def main(self):
         while True:

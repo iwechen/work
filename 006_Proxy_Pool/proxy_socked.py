@@ -15,6 +15,8 @@ class WSGIServer(object):
         self.tcp_server_socket.bind(("",port))
         self.tcp_server_socket.listen(128)
 
+        self.tcp_client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+
 
     def run_for_server(self):
         '''为客户连接'''
@@ -31,6 +33,23 @@ class WSGIServer(object):
             client_socket.close()
         # 关闭服务器套接字
         self.tcp_server_socket.close()
+
+    def client(self,send_data):
+        # 建立链接
+        self.tcp_client_socket.connect(("61.155.164.110",3128))
+        # 发送数据
+        self.tcp_client_socket.send(send_data.encode("utf-8"))
+        recv_data = self.tcp_client_socket.recv(1024*100)
+
+        print(recv_data)
+        # 关闭链接s
+        # self.tcp_client_socket.close()
+
+
+    if __name__=="__mian__":
+        main()
+
+
 
     def service_client(self, client_socket):
         '''创建为客户服务'''
@@ -49,10 +68,8 @@ class WSGIServer(object):
             recv_data = recv_data.decode("utf-8",errors = "ignore")
             print('--------------------recv_data--------------------')
             print(recv_data)
-            a = re.findall(r'(.*?):(.*)\r',recv_data)[1:]
-
-            headers = {tup[0]:tup[1] for tup in li}
-            print('--------------------recv_data--------------------')
+            self.client(recv_data)
+            print('--------------------recv_data-end-------------------')
             request_list = recv_data.splitlines()
             # try:
             request_lines = request_list[0]
@@ -63,29 +80,19 @@ class WSGIServer(object):
             method = ret.group(1)
             url = ret.group(2)
             if method == 'GET':
-                # proxies = {'http':'http://'}
-                headers = {
-                # 'Accept': '*/*',
-                # 'Accept-Language': 'zh-CN,zh;q=0.8',
-                'User-Agent': 'Mozilla/5.0 (X11; Fedora; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36',
-                # 'Hosts': 'hm.baidu.com',
-                # 'Referer': 'http://www.xicidaili.com/nn',
-                # 'Connection': 'keep-alive'
-                }
-                response = requests.get(url=url,proxies = ,headers = headers).content
-                # print(response)
+    
 
                 request_headers = "HTTP/1.1 200 OK\r\n"
                 request_headers += "Content-Type:text/html;charset=utf-8\r\n"
-                request_headers += "Content-Length:%d\r\n" % len(response)
+                # request_headers += "Content-Length:%d\r\n" % len(response)
                 request_headers += "\r\n"
                 # 1，发送头部信息
                 send_data = request_headers
                 client_socket.send(send_data.encode("utf-8"))
 
-                request_body = response
-                client_socket.send(request_body)
-
+                # request_body = response
+                # client_socket.send(request_body)
+# 
             elif method == 'POST':
                 request_body = 'post!'
                 client_socket.send(request_body.encode("utf-8"))
