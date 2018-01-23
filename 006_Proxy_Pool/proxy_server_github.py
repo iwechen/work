@@ -41,6 +41,7 @@ else:
 
 
 def text_(s, encoding='utf-8', errors='strict'):
+
     """ If ``s`` is an instance of ``binary_type``, return
     ``s.decode(encoding, errors)``, otherwise return ``s``"""
     if isinstance(s, binary_type):
@@ -88,6 +89,7 @@ class ChunkParser(object):
         while more: more, data = self.process(data)
     
     def process(self, data):
+        print('--------------------------------22-----------------------------------')
         if self.state == CHUNK_PARSER_STATE_WAITING_FOR_SIZE:
             line, data = HttpParser.split(data)
             self.size = int(line, 16)
@@ -139,6 +141,7 @@ class HttpParser(object):
         self.buffer = data
     
     def process(self, data):
+        print('--------------------------------21-----------------------------------')
         if self.state >= HTTP_PARSER_STATE_HEADERS_COMPLETE and \
         (self.method == b"POST" or self.type == HTTP_RESPONSE_PARSER):
             if not self.body:
@@ -160,6 +163,7 @@ class HttpParser(object):
             return False, b''
         
         line, data = HttpParser.split(data)
+        # print(data)
         if line == False: return line, data
         
         if self.state < HTTP_PARSER_STATE_LINE_RCVD:
@@ -172,10 +176,11 @@ class HttpParser(object):
         not self.method == b"POST" and \
         self.raw.endswith(CRLF*2):
             self.state = HTTP_PARSER_STATE_COMPLETE
-        
+        # print(data)
         return len(data) > 0, data
     
     def process_line(self, data):
+        print('--------------------------------20-----------------------------------')
         line = data.split(SP)
         if self.type == HTTP_REQUEST_PARSER:
             self.method = line[0].upper()
@@ -188,6 +193,7 @@ class HttpParser(object):
         self.state = HTTP_PARSER_STATE_LINE_RCVD
     
     def process_header(self, data):
+        print('--------------------------------19-----------------------------------')
         if len(data) == 0:
             if self.state == HTTP_PARSER_STATE_RCVING_HEADERS:
                 self.state = HTTP_PARSER_STATE_HEADERS_COMPLETE
@@ -211,9 +217,11 @@ class HttpParser(object):
         return url
     
     def build_header(self, k, v):
+        # print(k + b": " + v + CRLF)
         return k + b": " + v + CRLF
     
     def build(self, del_headers=None, add_headers=None):
+        print('--------------------------------18-----------------------------------')
         req = b" ".join([self.method, self.build_url(), self.version])
         req += CRLF
         
@@ -244,11 +252,14 @@ class Connection(object):
     """TCP server/client connection abstraction."""
     
     def __init__(self, what):
+        print('--------------------------------17-----------------------------------')
         self.buffer = b''
         self.closed = False
         self.what = what # server or client
     
     def send(self, data):
+        print('--------------------------------16.5-------------------------------------')
+        # print(data)
         return self.conn.send(data)
     
     def recv(self, bytes=8192):
@@ -258,6 +269,7 @@ class Connection(object):
                 logger.debug('recvd 0 bytes from %s' % self.what)
                 return None
             logger.debug('rcvd %d bytes from %s' % (len(data), self.what))
+            print(data)
             return data
         except Exception as e:
             logger.exception('Exception while receiving from connection %s %r with reason %r' % (self.what, self.conn, e))
@@ -274,9 +286,11 @@ class Connection(object):
         return self.buffer_size() > 0
     
     def queue(self, data):
+
         self.buffer += data
     
     def flush(self):
+        print(self.buffer)
         sent = self.send(self.buffer)
         self.buffer = self.buffer[sent:]
         logger.debug('flushed %d bytes to %s' % (sent, self.what))
@@ -287,9 +301,11 @@ class Server(Connection):
     def __init__(self, host, port):
         super(Server, self).__init__(b'server')
         self.addr = (host, int(port))
-    
+        print('--------------------------------16-----------------------------------')
+        print(self.addr)
     def connect(self):
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        
         self.conn.connect((self.addr[0], self.addr[1]))
 
 class Client(Connection):
@@ -299,6 +315,8 @@ class Client(Connection):
         super(Client, self).__init__(b'client')
         self.conn = conn
         self.addr = addr
+        print('--------------------------------15-----------------------------------')
+        # print(addr)
 
 class ProxyError(Exception):
     pass
@@ -309,6 +327,7 @@ class ProxyConnectionFailed(ProxyError):
         self.host = host
         self.port = port
         self.reason = reason
+        print('--------------------------------14-----------------------------------')
     
     def __str__(self):
         return '<ProxyConnectionFailed - %s:%s - %s>' % (self.host, self.port, self.reason)
@@ -321,7 +340,7 @@ class Proxy(multiprocessing.Process):
     
     def __init__(self, client):
         super(Proxy, self).__init__()
-        
+        print('--------------------------------13-----------------------------------')
         self.start_time = self._now()
         self.last_activity = self.start_time
         
@@ -347,10 +366,12 @@ class Proxy(multiprocessing.Process):
         return self._inactive_for() > 30
     
     def _process_request(self, data):
+        print('--------------------------------12-----------------------------------')
         # once we have connection to the server
         # we don't parse the http request packets
         # any further, instead just pipe incoming
         # data from client to server
+        # print(data)
         if self.server and not self.server.closed:
             self.server.queue(data)
             return
@@ -367,7 +388,7 @@ class Proxy(multiprocessing.Process):
                 host, port = self.request.url.path.split(COLON)
             elif self.request.url:
                 host, port = self.request.url.hostname, self.request.url.port if self.request.url.port else 80
-            
+            print(host)
             self.server = Server(host, port)
             try:
                 logger.debug('connecting to server %s:%s' % (host, port))
@@ -391,6 +412,7 @@ class Proxy(multiprocessing.Process):
                 ))
     
     def _process_response(self, data):
+        print('--------------------------------11-----------------------------------')
         # parse incoming response packet
         # only for non-https requests
         if not self.request.method == b"CONNECT":
@@ -400,6 +422,7 @@ class Proxy(multiprocessing.Process):
         self.client.queue(data)
     
     def _access_log(self):
+        print('--------------------------------10-----------------------------------')
         host, port = self.server.addr if self.server else (None, None)
         if self.request.method == b"CONNECT":
             logger.info("%s:%s - %s %s:%s" % (self.client.addr[0], self.client.addr[1], self.request.method, host, port))
@@ -407,6 +430,7 @@ class Proxy(multiprocessing.Process):
             logger.info("%s:%s - %s %s:%s%s - %s %s - %s bytes" % (self.client.addr[0], self.client.addr[1], self.request.method, host, port, self.request.build_url(), self.response.code, self.response.reason, len(self.response.raw)))
         
     def _get_waitable_lists(self):
+        print('--------------------------------8-----------------------------------')
         rlist, wlist, xlist = [self.client.conn], [], []
         logger.debug('*** watching client for read ready')
         
@@ -434,9 +458,12 @@ class Proxy(multiprocessing.Process):
             self.server.flush()
     
     def _process_rlist(self, r):
+        print('--------------------------------7-----------------------------------')
         if self.client.conn in r:
             logger.debug('client is ready for reads, reading')
             data = self.client.recv()
+            print('---------------------------6.5--------------------------------')
+            print(data)
             self.last_activity = self._now()
             
             if not data:
@@ -460,6 +487,7 @@ class Proxy(multiprocessing.Process):
         if self.server and not self.server.closed and self.server.conn in r:
             logger.debug('server is ready for reads, reading')
             data = self.server.recv()
+            # print(data)
             self.last_activity = self._now()
             
             if not data:
@@ -471,10 +499,12 @@ class Proxy(multiprocessing.Process):
         return False
     
     def _process(self):
+        print('--------------------------------6-----------------------------------')
         while True:
             rlist, wlist, xlist = self._get_waitable_lists()
+            # print(rlist,wlist,xlist)
             r, w, x = select.select(rlist, wlist, xlist, 1)
-            
+            print(r,w,x)
             self._process_wlist(w)
             if self._process_rlist(r):
                 break
@@ -489,6 +519,7 @@ class Proxy(multiprocessing.Process):
                     break
     
     def run(self):
+        print('--------------------------------5-----------------------------------')
         logger.debug('Proxying connection %r at address %r' % (self.client.conn, self.client.addr))
         try:
             self._process()
@@ -505,6 +536,7 @@ class Proxy(multiprocessing.Process):
             logger.debug('Closing proxy for connection %r at address %r' % (self.client.conn, self.client.addr))
 
 class TCP(object):
+    print('--------------------------------4-----------------------------------')
     """TCP server implementation."""
     
     def __init__(self, hostname='127.0.0.1', port=8899, backlog=100):
@@ -516,11 +548,14 @@ class TCP(object):
         raise NotImplementedError()
     
     def run(self):
+        print('--------------------------------3-----------------------------------')
         try:
             logger.info('Starting server on port %d' % self.port)
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.socket.bind((self.hostname, self.port))
+            # self.socket.bind((self.hostname, self.port))
+            self.socket.bind(('', self.port))
+
             self.socket.listen(self.backlog)
             while True:
                 conn, addr = self.socket.accept()
@@ -540,12 +575,14 @@ class HTTP(TCP):
     """
     
     def handle(self, client):
+        print('--------------------------------2-----------------------------------')
         proc = Proxy(client)
         proc.daemon = True
         proc.start()
         logger.debug('Started process %r to handle connection %r' % (proc, client.conn))
 
 def main():
+    print('--------------------------------1-----------------------------------')
     parser = argparse.ArgumentParser(
         description='proxy.py v%s' % __version__,
         epilog='Having difficulty using proxy.py? Report at: %s/issues/new' % __homepage__

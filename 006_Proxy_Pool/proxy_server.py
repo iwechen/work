@@ -49,10 +49,9 @@ class WSGIServer(object):
             recv_data = recv_data.decode("utf-8",errors = "ignore")
             print('--------------------recv_data--------------------')
             print(recv_data)
-            a = re.findall(r'(.*?):(.*)\r',recv_data)[1:]
-
-            headers = {tup[0]:tup[1] for tup in li}
+            headers = {tup[0]:tup[1] for tup in re.findall(r'(.*?):(.*)\r',recv_data)[1:]}
             print('--------------------recv_data--------------------')
+            print(headers)
             request_list = recv_data.splitlines()
             # try:
             request_lines = request_list[0]
@@ -63,18 +62,11 @@ class WSGIServer(object):
             method = ret.group(1)
             url = ret.group(2)
             if method == 'GET':
-                # proxies = {'http':'http://'}
-                headers = {
-                # 'Accept': '*/*',
-                # 'Accept-Language': 'zh-CN,zh;q=0.8',
-                'User-Agent': 'Mozilla/5.0 (X11; Fedora; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36',
-                # 'Hosts': 'hm.baidu.com',
-                # 'Referer': 'http://www.xicidaili.com/nn',
-                # 'Connection': 'keep-alive'
-                }
-                response = requests.get(url=url,proxies = ,headers = headers).content
-                # print(response)
-
+                # proxies = {'http':'http://120.77.35.22:8899'}
+                proxies = {'http':'http://61.155.164.111:3128'}
+                print(url)
+                response = requests.get(url=url,headers = headers).content
+                print(response)
                 request_headers = "HTTP/1.1 200 OK\r\n"
                 request_headers += "Content-Type:text/html;charset=utf-8\r\n"
                 request_headers += "Content-Length:%d\r\n" % len(response)
@@ -99,8 +91,8 @@ class WSGIServer(object):
 
 def main():
     """完成服务器运行流程"""
-    port= 7890
-    print('server start!  PORT:7890')
+    port= 8899
+    print('server start!  PORT:%d'%port)
     # 创建服务器对象
     server = WSGIServer(port)
     server.run_for_server()
