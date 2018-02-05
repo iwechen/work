@@ -10,6 +10,7 @@ import random
 import redis
 import logging
 from config import ACCOUNT_POOL
+from YDMHTTPDemo3 import YDMHttp
 try:
     from PIL import Image
 except:
@@ -114,9 +115,18 @@ class Cookies(object):
             login_page = self.session.post(login_url, data=postdata, headers=self.headers)
         else:
             # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            # 手动输入验证码
+            # pcid = sever_data["pcid"]
+            # self.get_cha(pcid)
+            # postdata['door'] = input(u"请输入验证码")
+            # login_page = self.session.post(login_url, data=postdata, headers=self.headers)
+            # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            # 打码云
             pcid = sever_data["pcid"]
             self.get_cha(pcid)
-            postdata['door'] = input(u"请输入验证码")
+            # postdata['door'] = input(u"请输入验证码")
+            damayun = YDMHttp()
+            postdata['door'] = damayun.start()
             login_page = self.session.post(login_url, data=postdata, headers=self.headers)
             # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         login_loop = (login_page.content.decode("GBK"))

@@ -18,7 +18,7 @@ class WeiBoSpider(object):
 
     def send_request(self):
         timetamp = str(int((time.time())*1000))
-        params = {'page':'38','key':'新疆~哈密','type':'shishi','_t':'0','__rnd':timetamp}
+        params = {'page':'3','key':'新疆~哈密','hasvideo':'','xsort':'social','type':'shishi','_t':'0','__rnd':timetamp}
         url = "http://s.weibo.com/ajax/morestatus?"
         proxies = PROXY_POOL[0]
         # proxies = {"http":"13273023501:wpnoft3h@120.28.218.32:16819"} 
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     redis = redis.Redis(host='127.0.0.1',port=6379, db=1)
     cookie_dict = redis.hgetall('cookie')
     # 判断cookie 池库存
-    if len(cookie_dict) < 1:
+    if len(cookie_dict) <= 1:
         logging.warning('Cookies pool low stocks')
         logging.warning('Start stockpiling!')
         cookies = Cookies()
