@@ -66,7 +66,7 @@ class Check_Ip(object):
     def start_spider(self):
         gip_li = [gip for gip in self.collection.find({'count':3})]
         print('-SPIDER----------------当前有效代理数量：%d-----------------\n'%len(gip_li))
-        if len(gip_li)<=80:
+        if len(gip_li)<=200:
             print('-SPIDER----------------代理尺库存代理不足，开始爬取-----------------\n')
             a = Proxy_Spider()
             a.main()
