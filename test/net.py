@@ -1,15 +1,11 @@
-import times
+import requests
 
-while True:
-    minute = time.strftime('%M',time.localtime(time.time()))
-    print(minutes)
-    if re.match(r'.*2$|.*3$|.*7$|.*8$',minute):
-        time.sleep(3)
-        continue
-    else:
-        print('程序运行！')
-        time.sleep(3) 
+headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'}
 
 
+lottery = '180208-061'
+url = 'http://eoifu.cn/Plus/SendPrize/KR_SendPrize_Ssc.asp?lt=%D6%D8%C7%EC%CA%B1%CA%B1%B2%CA&cp_num='+lottery+'&Submit=%CC%E1%BD%BB'
 
-
+response = requests.get(url = url).content
+print(response.decode('gbk'))
+print('ok')
