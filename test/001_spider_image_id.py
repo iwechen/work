@@ -1,11 +1,16 @@
 import requests
 from lxml import etree
-
-
+import logging
+import re
+import pymongo
 
 class SheTuWang(object):
     """摄图网爬虫"""
+
     def __init__(self,):
+        self.client = pymongo.MongoClient(host='127.0.0.1',port=27017)
+        self.db = self.client['SheTu']
+        self.collection = self.db['shetuwang_item']
         self.cookies = {
             'mediav': '^%^7B^%^22eid^%^22^%^3A^%^22278616^%^22^%^2C^%^22ep^%^22^%^3A^%^22^%^22^%^2C^%^22vid^%^22^%^3A^%^229^%^5B^%^3C4KhV^%^3AMa^%^3A^%^23()^%^3CPW^%^2Bq^%^23^%^22^%^2C^%^22ctn^%^22^%^3A^%^22^%^22^%^7D',
             'uniqid': '5a7b97b211066',
@@ -42,33 +47,73 @@ class SheTuWang(object):
             'Connection': 'keep-alive',
             'Cache-Control': 'max-age=0',
         }
-    def send_request(self,url):
-        response = requests.get(url = url, headers=self.headers, cookies=self.cookies)
+
+    def send_request(self, url):
+        response = requests.get(
+            url=url, headers=self.headers, cookies=self.cookies)
         return response.content.decode('utf-8')
 
-    def collect_category_url(self,response):
+    def collect_category_url(self, response):
         '''收集所有类url'''
         html = etree.HTML(response)
         categoty_url_li = html.xpath('//div[@class="nav-row"]/div/a/@href')
         return categoty_url_li
 
-    def start_ategory(self,categoty_url_li):
-        for url in categoty_url_li[:1]:
-            response = self.send_request(url)
-            html = etree.HTML(response)
-            image_url_li = html.xpath('//*[@id="wrapper"]/div[3]/div[2]/div/a/@href')
-            print(image_url_li)
+    def save_to_mongo(self,data_li):
+        try:
+            self.collection.insert(data_li)
+            print('successful')
+        except:
+            print('default')
 
+    def collect_page_uimage_url(self, url, category_name):
+        response = self.send_request(url)
+        html = etree.HTML(response)
+        image_url_li = html.xpath(
+            '//*[@id="wrapper"]/div[3]/div[2]/div/a/@href')
+        last_page_url = 'http://699pic.com/' + \
+            html.xpath('//*[@id="wrapper"]/div[4]/div/a/@href')[-1:][0]
+        image_li = []
+        for i in image_url_li:
+            image_dict = {}
+            image_dict['url'] = i
+            image_dict['id'] = re.search(r'-(\d+).html', i).group(1)
+            image_dict['category_name'] = category_name
+            image_li.append(image_dict)
+        # print(image_li)
+
+        self.save_to_mongo(image_li)
+        return last_page_url
+
+    def start_category(self, category_url_li):
+        '''开始收集子类页面图片'''
+        # 遍历所有类url
+        for url in category_url_li[3:]:
+            # print(url)
+            category_name = re.search(r'(.*).html', url.split('/')[3]).group(1)
+            print(category_name)
+            last_page_url = self.collect_page_uimage_url(url, category_name)
+            page = 2
+            while True:
+                pages = '-' + str(page) + '-0-0-0-0-0-0.html'
+                now_page_url = re.sub(r'\.html', pages, url)
+                # print(now_page_url)
+                # print(last_page_url)
+                if last_page_url == now_page_url:
+                    last_page_url = self.collect_page_uimage_url(url, category_name)
+                    break
+                else:
+                    last_page_url = self.collect_page_uimage_url(url, category_name)
+                    page += 1
+                    continue
 
     def main(self):
         url = 'http://699pic.com/photo/'
         response = self.send_request(url)
-        categoty_url_li = self.collect_category_url(response)
-        self.start_ategory(categoty_url_li)
+        category_url_li = self.collect_category_url(response)
+        self.start_category(category_url_li)
 
 
 if __name__ == '__main__':
     shetu = SheTuWang()
     shetu.main()
-
-
