@@ -76,7 +76,6 @@ class YH(object):
             city_dict['cityid'] = position_tup[0]
             city_dict['lat'] = position_tup[1]
             city_dict['lng'] = position_tup[2]
-
             print(position_tup[3])
             # 开始获取店铺信息
             self.start_store_data(city_dict)
