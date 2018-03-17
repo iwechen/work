@@ -1,6 +1,7 @@
 import requests
 import json
 import time
+import datetime
 import pymongo
 
 class DateTime(object):
@@ -45,8 +46,8 @@ class DateTime(object):
 
             params = {
                 'symbol':symbol,
-                # 'period':'all'
-                'period':'6m'
+                'period':'all'
+                # 'period':'6m'
                 # 'one_min':'1'
             }
 
@@ -57,13 +58,15 @@ class DateTime(object):
             symbol = ret['stock']['symbol']
             print(symbol)
             for i in ret['chartlist']:
-                print(i)
+                # print(i)
                 data_dict = {}
                 timestamp = str(i['timestamp'])[:10]
                 time_local = time.localtime(int(timestamp))
                 symbol = ret['stock']['symbol']
                 timestamp = time.strftime("%Y-%m-%d",time_local)
-                data = [i for i in self.collection.find({'symbol':symbol,'dt':timestamp})]
+                timestamp = datetime.datetime.strptime(timestamp,'%Y-%m-%d')
+                data = [i for i in self.collection.find({'symbol':symbol,'timestamp':timestamp})]
+                # print(type(timestamp))
                 if data !=[]:
                     print('---------------存在----------------------')
                     continue
@@ -71,7 +74,7 @@ class DateTime(object):
                 # 股票代码
                 data_dict['symbol'] = symbol
                 # 时间
-                data_dict['dt'] = timestamp
+                data_dict['timestamp'] = timestamp
                 # 均价
                 data_dict['avg_price'] = i['avg_price']
                 # 当前价

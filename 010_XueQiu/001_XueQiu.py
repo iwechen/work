@@ -9,10 +9,14 @@ import json
 import time
 import pymongo
 from Select import SelectMongo
+from datetime import datetime
 
 
 class XueQiu(object):
     def __init__(self):
+        self.client = pymongo.MongoClient(host='127.0.0.1',port=27017)
+        self.db = self.client['XueQiu']
+        self.collection = self.db['data']
         self.headers = {
             'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
@@ -92,47 +96,73 @@ class XueQiu(object):
             'https://xueqiu.com/statuses/search.json?',headers=self.headers,params=params,cookies=self.cookies).content.decode('utf-8')
         ret = json.loads(response)
         for i in range(10):
+            symbol_li = []
+            symbol_dic = {}
             try:
                 # 用户ID
-                print(ret['list'][i]['user_id'])
+                user_id = ret['list'][i]['user_id']
+                symbol_dic['user_id'] = user_id
                 # 发帖时间
                 timestamp = ret['list'][i]['created_at']
                 timestamp = str(timestamp)[:10]
                 time_local = time.localtime(int(timestamp))
                 timestamp = time.strftime("%Y-%m-%d",time_local)
-                if (timestamp == '2018-03-04')or(timestamp == '2018-03-03'):
+                if (timestamp == '2018-03-16')or(timestamp == '2018-03-17'):
                     continue
-                print(timestamp)
+                symbol_dic['timestamp'] = timestamp
                 # 发帖内容
-                print(ret['list'][i]['text'])
+                text = ret['list'][i]['text']
+                symbol_dic['text'] = text
                 # 粉丝数
-                print(ret['list'][i]['user']['followers_count'])
+                followers_count = ret['list'][i]['user']['followers_count']
+                symbol_dic['followers_count'] = followers_count
                 # 关注量
-                print(ret['list'][i]['user']['friends_count'])
+                friends_count = ret['list'][i]['user']['friends_count']
+                symbol_dic['friends_count'] = friends_count
                 # 帖子量
-                print(ret['list'][i]['user']['status_count'])
+                status_count = ret['list'][i]['user']['status_count']
+                symbol_dic['status_count'] = status_count
                 # 评论量
-                print(ret['list'][i]['reply_count'])
+                reply_count = ret['list'][i]['reply_count']
+                symbol_dic['reply_count'] = reply_count
                 # 点赞量
-                print(ret['list'][i]['like_count'])
+                like_count = ret['list'][i]['like_count']
+                symbol_dic['like_count'] = like_count
                 # 转发量
-                print(ret['list'][i]['retweet_count'])
+                retweet_count = ret['list'][i]['retweet_count']
+                symbol_dic['retweet_count'] = retweet_count
+                timestamp = datetime.strptime(timestamp,'%Y-%m-%d')
                 sm = SelectMongo(symbol,timestamp)
-                a = sm.main()
+                a = sm.run()
                 # 当前价
-                print(a[0]['current'])
+                current = a['current']
+                symbol_dic['current'] = current
                 # 成交量
-                print(a[0]['volume'])
+                volume = a['volume']
+                symbol_dic['volume'] = volume
+                # 后五日走势
+                next_day_current = a['next_day_current']
+                symbol_dic['next_day_current'] = next_day_current
                 # 股票代码
-                print(symbol)
+                symbol_dic['symbol'] = symbol
                 # 股票名称
                 name = self.symbol_name(symbol)
-                print(name)
+                symbol_dic['name'] = name
+
+                symbol_li.append(symbol_dic)
+
             except Exception as e:
                 print(e)
-  
+            else:
+                # print(symbol_li)
+                self.save_to_mongo(symbol_li)
 
-
+    def save_to_mongo(self,data_li):
+        try:
+            self.collection.insert(data_li)
+            print('successful')
+        except:
+            print('default')
 
     def main(self):
         for i in range(300001,3000741):
@@ -142,9 +172,6 @@ class XueQiu(object):
             for page in range(1,101):
                 print('第 %d 页'%page)
                 self.sned_req(symbol,page)
-
-
-
 
 if __name__ == '__main__':
     xq = XueQiu()
