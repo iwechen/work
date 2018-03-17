@@ -1,0 +1,15 @@
+<tr bgcolor="#CCCCCC">
+          <td></td>
+          <td>STN80120A</td> 
+          <td>北京市私立汇佳学校</td>
+          <td align="center">--</td>
+          <td align="center">已截止</td>
+        </tr>
+        
+        <tr bgcolor="#CCCCCC">
+          <td></td>
+          <td>STN80120B</td> 
+          <td>北京市私立汇佳学校</td>
+          <td align="center">--</td>
+          <td align="center">已截止</td>
+        </tr>

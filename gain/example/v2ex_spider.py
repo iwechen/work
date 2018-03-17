@@ -15,6 +15,5 @@ class MySpider(Spider):
     parsers = [Parser('/go/create?p=\d+'),
                Parser('/t/\d+#reply\d+', Post)]
 
+
 MySpider.run()
-
-

@@ -1,0 +1,6 @@
+requests
+pyquery
+pymysql
+selenium
+#解析域名
+tldextract

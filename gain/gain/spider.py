@@ -14,7 +14,6 @@ try:
 except ImportError:
     pass
 
-ß
 
 class Spider:
     start_url = ''
