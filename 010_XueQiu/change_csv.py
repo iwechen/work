@@ -15,8 +15,6 @@ class ChangeCsv(object):
         self.card_list = card_list
         # print(self.card_list)
 
-            
-
     def save_to_csv(self):
         '''保存到csv文件'''
         # # print(card_list)
