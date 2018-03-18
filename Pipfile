@@ -9,6 +9,7 @@ name = "pypi"
 
 requests = "*"
 pymongo = "*"
+mongoengine = "*"
 
 
 [dev-packages]

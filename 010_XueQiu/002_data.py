@@ -58,7 +58,7 @@ class DateTime(object):
             symbol = ret['stock']['symbol']
             print(symbol)
             for i in ret['chartlist']:
-                # print(i)
+                print(i)
                 data_dict = {}
                 timestamp = str(i['timestamp'])[:10]
                 time_local = time.localtime(int(timestamp))
@@ -99,7 +99,7 @@ class DateTime(object):
 
 if __name__=="__main__":
     dt = DateTime()
-    for i in range(300001,3000741):
+    for i in range(300731,3000741):
         symbol = 'SZ'+str(i)
         
         dt.main(symbol)

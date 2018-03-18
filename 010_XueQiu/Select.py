@@ -1,5 +1,6 @@
 import pymongo
 import re
+import mongoengine
 from datetime import datetime, timedelta, date, time
 
 
@@ -21,6 +22,8 @@ class SelectMongo(object):
         if today == []:
             while True:
                 # 1,查询当日数据
+                # db.xxx.find({"updateTime" : {"$gte":ISODate("2013-01-17T01:16:33.303Z")}})
+                # max_data = [i for i in self.collection.find({'symbol':self.symbol,'timestamp':{"$gte":temp}})]
                 max_data = [i for i in self.collection.find({'symbol':self.symbol,'timestamp':temp})]
                 if max_data == []:
                     # print(temp)
@@ -29,7 +32,7 @@ class SelectMongo(object):
                 # 2,查询后五日数据
                 else:
                     temp = self.timestamp
-                    # print(max_data)
+                    # print(max_data.sort(key=lambda x:x["timestamp"]))
                     break
             # 开始最小值
             while True:
@@ -77,7 +80,7 @@ class SelectMongo(object):
 
 if __name__=="__main__":
     symbol = 'SZ300001'
-    timestamp = '2013-04-16'
+    timestamp = '2013-04-14'
     timestamp = datetime.strptime(timestamp,'%Y-%m-%d')
     sm = SelectMongo(symbol,timestamp)
     a = sm.main()

@@ -5,9 +5,11 @@ Created on 2018年3月2日
 Email:iwechen123@gmail.com
 '''
 import requests
+import threading
 import json
 import time
 import pymongo
+import hashlib
 from Select import SelectMongo
 from datetime import datetime
 
@@ -22,39 +24,28 @@ class XueQiu(object):
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
         }
         self.cookies = {
-            'device_id':
-            '0279b10c4c80dea605e612e10396683a',
-            '__utmz':
-            '1.1516771804.1.1.utmcsr=(direct)^|utmccn=(direct)^|utmcmd=(none)',
-            's':
-            'fb1215dia5',
-            'xq_a_token':
-            '3836bb2166e0e438ade26542b67832432e93209b',
-            'xqat':
-            '3836bb2166e0e438ade26542b67832432e93209b',
-            'xq_r_token':
-            '43cfe05ee4d224d657f3866da9fc06c5e66b35f7',
-            'xq_token_expire':
-            'Mon^%^20Mar^%^2026^%^202018^%^2020^%^3A53^%^3A30^%^20GMT^%^2B0800^%^20(CST)',
-            'xq_is_login':
-            '1',
-            'u':
-            '1058215398',
-            'bid':
-            '54cdece1f2daa5054574b5263766caff_je8ignqc',
-            'aliyungf_tc':
-            'AQAAAF5fZQlHxAkAZQv3diR/lQ+njB13',
-            'Hm_lvt_1db88642e346389874251b5a1eded6e3':
-            '1519908742,1519908985,1519973511,1519973937',
-            '__utma':
-            '1.1573219580.1516771804.1519912827.1519973941.4',
-            '__utmc':
-            '1',
-            'Hm_lpvt_1db88642e346389874251b5a1eded6e3':
-            '1519973999',
-            '__utmb':
-            '1.3.10.1519973941',
-        }
+            'aliyungf_tc': 'AQAAAKtL+Wx7HAUAs63zdPSJ2jGC8jrG',
+            'xq_a_token.sig': 'aaTVFAX9sVcWtOiu-5L8dL-p40k',
+            'xq_r_token.sig': 'rEvIjgpbifr6Q_Cxwx7bjvarJG0',
+            'Hm_lvt_1db88642e346389874251b5a1eded6e3': '1521288871',
+            'device_id': 'ce0a59849606ef4e2a7e215507d44300',
+            's': 'ek19tty35r',
+            'xq_a_token': '3836bb2166e0e438ade26542b67832432e93209b',
+            'xqat': '3836bb2166e0e438ade26542b67832432e93209b',
+            'xq_r_token': '43cfe05ee4d224d657f3866da9fc06c5e66b35f7',
+            'xq_token_expire': 'Wed%20Apr%2011%202018%2020%3A14%3A52%20GMT%2B0800%20(CST)',
+            'xq_is_login': '1',
+            'u': '1058215398',
+            'bid': '54cdece1f2daa5054574b5263766caff_jevc4mgf',
+            'snbim_minify': 'true',
+            '__utma': '1.1464544356.1521288913.1521288913.1521288913.1',
+            '__utmc': '1',
+            '__utmz': '1.1521288913.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none)',
+            '__utmt': '1',
+            '__utmb': '1.3.10.1521288913',
+            'Hm_lpvt_1db88642e346389874251b5a1eded6e3': '1521288977',
+            }
+
 
 
     def symbol_name(self,symbol):
@@ -67,18 +58,28 @@ class XueQiu(object):
         name = ret[symbol]['name']
         return name
 
+    def hash_to_md5(self,sign_str):
+        '''
+        接收：接收待加密的字符串
+        返回：sign签名字符串
+        '''
+        # 创建MD5对象
+        m= hashlib.md5()
+        sign_str = sign_str.encode('utf-8')
+        # 加密字符串  
+        m.update(sign_str) 
+        sign = m.hexdigest() 
+        return sign
+
     def sned_req(self,symbol,page):
-
-
-
         headers = {
-            # 'Accept-Encoding':'gzip, deflate, br',
-            # 'Accept-Language':'zh-CN,zh;q=0.9',
-            'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36',
-            # 'Accept':'*/*',
-            # 'Referer':'https://xueqiu.com/S/SZ300001',
-            # 'X-Requested-With':'XMLHttpRequest',
-            # 'Connection':'keep-alive'
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept-Language': 'zh-CN,zh;q=0.9',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.162 Safari/537.36',
+            'Accept': '*/*',
+            'Referer': 'https://xueqiu.com/S/SZ300001',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Connection': 'keep-alive',
         }
 
         params = {
@@ -91,9 +92,11 @@ class XueQiu(object):
             'page':str(page),
             'q':''
         }
-
+        proxies = {'http':'http://120.77.35.48:8899'}
         response = requests.get(
-            'https://xueqiu.com/statuses/search.json?',headers=self.headers,params=params,cookies=self.cookies).content.decode('utf-8')
+            'https://xueqiu.com/statuses/search.json?',proxies = proxies,headers=self.headers,params=params,cookies=self.cookies).content.decode('utf-8')
+        # print(response)
+        # print(response.url)
         ret = json.loads(response)
         for i in range(10):
             symbol_li = []
@@ -109,6 +112,7 @@ class XueQiu(object):
                 timestamp = time.strftime("%Y-%m-%d",time_local)
                 if (timestamp == '2018-03-16')or(timestamp == '2018-03-17'):
                     continue
+
                 symbol_dic['timestamp'] = timestamp
                 # 发帖内容
                 text = ret['list'][i]['text']
@@ -151,6 +155,14 @@ class XueQiu(object):
 
                 symbol_li.append(symbol_dic)
 
+                sign_str = str(user_id) + text + str(reply_count) + symbol + str(timestamp)
+
+                sign = self.hash_to_md5(sign_str)
+
+                symbol_dic['sign'] = sign
+
+                if [i for i in self.collection.find({'sign':sign})] != []:
+                    break
             except Exception as e:
                 print(e)
             else:
@@ -164,14 +176,52 @@ class XueQiu(object):
         except:
             print('default')
 
-    def main(self):
-        for i in range(300001,3000741):
+    def run1(self,start):
+        for i in range(start,300741):
             symbol = 'SZ'+str(i)
             # symbol = 'SZ300002'
             print('股票代码: %s'%symbol)
-            for page in range(1,101):
+            for page in range(1,25):
+                print('第 %d 页'%page)
+                time.sleep(1)
+                self.sned_req(symbol,page)
+    def run2(self,start):
+        for i in range(start,300741):
+            symbol = 'SZ'+str(i)
+            # symbol = 'SZ300002'
+            print('股票代码: %s'%symbol)
+            for page in range(25,50):
                 print('第 %d 页'%page)
                 self.sned_req(symbol,page)
+    def run3(self,start):
+        for i in range(start,300741):
+            symbol = 'SZ'+str(i)
+            # symbol = 'SZ300002'
+            print('股票代码: %s'%symbol)
+            for page in range(50,75):
+                print('第 %d 页'%page)
+                self.sned_req(symbol,page)
+    def run4(self,start):
+        for i in range(start,300741):
+            symbol = 'SZ'+str(i)
+            # symbol = 'SZ300002'
+            print('股票代码: %s'%symbol)
+            for page in range(75,101):
+                print('第 %d 页'%page)
+                self.sned_req(symbol,page)
+
+    def main(self):
+        start = 300240
+        t1 = threading.Thread(target=self.run1,args = (start,))
+        t1.start()
+        t2 = threading.Thread(target=self.run2,args = (start,))
+        t2.start()
+        t3 = threading.Thread(target=self.run3,args = (start,))
+        t3.start()
+        t4 = threading.Thread(target=self.run4,args = (start,))
+        t4.start()
+
+            # time.sleep(5)
 
 if __name__ == '__main__':
     xq = XueQiu()
