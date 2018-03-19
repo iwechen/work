@@ -348,7 +348,7 @@ class Task(object):
                 _parser.parse(page)
 
                 item[key] = _parser.result
-        except Exception, e:
+        except Exception as e:
             logger.error("parse detail page error: %s", url, exc_info=True)
             raise
 
