@@ -2,7 +2,7 @@ import pymongo
 import re
 import mongoengine
 from datetime import datetime, timedelta, date, time
-
+# import time
 
 class SelectMongo(object):
     def __init__(self,symbol,timestamp):
@@ -20,41 +20,41 @@ class SelectMongo(object):
         today = [i for i in self.collection.find({'symbol':self.symbol,'timestamp':temp})]
         # 当日数据空，循环查找均值
         if today == []:
-            while True:
-                # 1,查询当日数据
-                # db.xxx.find({"updateTime" : {"$gte":ISODate("2013-01-17T01:16:33.303Z")}})
-                # max_data = [i for i in self.collection.find({'symbol':self.symbol,'timestamp':{"$gte":temp}})]
-                max_data = [i for i in self.collection.find({'symbol':self.symbol,'timestamp':temp})]
-                if max_data == []:
-                    # print(temp)
-                    temp = temp + timedelta(days=1)
-                    continue
-                # 2,查询后五日数据
-                else:
-                    temp = self.timestamp
-                    # print(max_data.sort(key=lambda x:x["timestamp"]))
-                    break
-            # 开始最小值
-            while True:
-                # 1,查询当日数据
-                min_data = [i for i in self.collection.find({'symbol':self.symbol,'timestamp':temp})]
-                if min_data == []:
-                    # print(temp)
-                    temp = temp - timedelta(days=1)
-                    continue
-                # 2,查询后五日数据
-                else:
-                    temp = self.timestamp
-                    # print(min_data)
-                    break
+            try:
+                 # 开始最大值
+                max_data = {}
+                while True:
+                    if max_data =={}:
+                        for i in self.collection.find({"symbol":self.symbol,"timestamp":{'$gte':temp}}).sort([{"timestamp",1}]):
+                            max_data = i
+                            # print(max_data)
+                            break
+                    else:
+                        break
+                 # 开始最小值
+                min_data = {}
+                while True:
+                    if min_data =={}:
+                        for i in self.collection.find({"symbol":self.symbol,"timestamp":{'$lte':temp}}).sort([{"timestamp",-1}]):
+                            min_data = i
+                            # print(min_data)
+                            break
+                    else:
+                        break
+            except Exception as e:
+                print(e)
+                # time.sleep(2)
+                self.today = False
+                return self.today
+            else:
             # 均价
-            avg_current = (max_data[0]['current'] + min_data[0]['current'])/2
-            self.today = min_data[0]
-            self.today['current'] = avg_current
-            self.today['timestamp'] = self.timestamp
-            self.today['next_day_current'] = max_data[0]['current']
+                avg_current = (max_data['current'] + min_data['current'])/2
+                self.today = min_data
+                self.today['current'] = avg_current
+                self.today['timestamp'] = self.timestamp
+                self.today['next_day_current'] = max_data['current']
 
-            return self.today
+                return self.today
 
         # 当日有数据，
         else:
@@ -80,7 +80,7 @@ class SelectMongo(object):
 
 if __name__=="__main__":
     symbol = 'SZ300001'
-    timestamp = '2013-04-14'
+    timestamp = '2017-09-05'
     timestamp = datetime.strptime(timestamp,'%Y-%m-%d')
     sm = SelectMongo(symbol,timestamp)
     a = sm.main()

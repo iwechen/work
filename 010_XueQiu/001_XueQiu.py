@@ -136,17 +136,23 @@ class XueQiu(object):
                 retweet_count = ret['list'][i]['retweet_count']
                 symbol_dic['retweet_count'] = retweet_count
                 timestamp = datetime.strptime(timestamp,'%Y-%m-%d')
-                sm = SelectMongo(symbol,timestamp)
-                a = sm.run()
-                # 当前价
-                current = a['current']
-                symbol_dic['current'] = current
-                # 成交量
-                volume = a['volume']
-                symbol_dic['volume'] = volume
-                # 后五日走势
-                next_day_current = a['next_day_current']
-                symbol_dic['next_day_current'] = next_day_current
+                while True:
+                    sm = SelectMongo(symbol,timestamp)
+                    a = sm.run()
+                    print(a)
+                    if a == False:
+                        continue
+                    else:
+                        # 当前价
+                        current = a['current']
+                        symbol_dic['current'] = current
+                        # 成交量
+                        volume = a['volume']
+                        symbol_dic['volume'] = volume
+                        # 后五日走势
+                        next_day_current = a['next_day_current']
+                        symbol_dic['next_day_current'] = next_day_current
+                        break
                 # 股票代码
                 symbol_dic['symbol'] = symbol
                 # 股票名称
@@ -211,7 +217,7 @@ class XueQiu(object):
                 self.sned_req(symbol,page)
 
     def main(self):
-        start = 300240
+        start = 300280
         t1 = threading.Thread(target=self.run1,args = (start,))
         t1.start()
         t2 = threading.Thread(target=self.run2,args = (start,))
