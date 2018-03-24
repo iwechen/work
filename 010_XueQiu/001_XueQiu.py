@@ -12,6 +12,7 @@ import pymongo
 import hashlib
 from Select import SelectMongo
 from datetime import datetime
+from six.moves import queue
 
 
 class XueQiu(object):
@@ -19,6 +20,9 @@ class XueQiu(object):
         self.client = pymongo.MongoClient(host='127.0.0.1',port=27017)
         self.db = self.client['XueQiu']
         self.collection = self.db['data']
+
+        self._error_task_queue = queue.Queue(1000)
+        self._error_task_set = set()
         self.headers = {
             'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
@@ -110,7 +114,7 @@ class XueQiu(object):
                 timestamp = str(timestamp)[:10]
                 time_local = time.localtime(int(timestamp))
                 timestamp = time.strftime("%Y-%m-%d",time_local)
-                if (timestamp == '2018-03-16')or(timestamp == '2018-03-17'):
+                if (timestamp == '2018-03-16')or(timestamp == '2018-03-17')or(timestamp == '2018-03-18')or(timestamp == '2018-03-19')or(timestamp == '2018-03-20')or(timestamp == '2018-03-21')or(timestamp == '2018-03-22')or(timestamp == '2018-03-23')or(timestamp == '2018-03-24'):
                     continue
 
                 symbol_dic['timestamp'] = timestamp
@@ -136,23 +140,17 @@ class XueQiu(object):
                 retweet_count = ret['list'][i]['retweet_count']
                 symbol_dic['retweet_count'] = retweet_count
                 timestamp = datetime.strptime(timestamp,'%Y-%m-%d')
-                while True:
-                    sm = SelectMongo(symbol,timestamp)
-                    a = sm.run()
-                    print(a)
-                    if a == False:
-                        continue
-                    else:
-                        # 当前价
-                        current = a['current']
-                        symbol_dic['current'] = current
-                        # 成交量
-                        volume = a['volume']
-                        symbol_dic['volume'] = volume
-                        # 后五日走势
-                        next_day_current = a['next_day_current']
-                        symbol_dic['next_day_current'] = next_day_current
-                        break
+                sm = SelectMongo(symbol,timestamp)
+                a = sm.run()
+                current = a['current']
+                symbol_dic['current'] = current
+                # 成交量
+                volume = a['volume']
+                symbol_dic['volume'] = volume
+                # 后五日走势
+                next_day_current = a['next_day_current']
+                symbol_dic['next_day_current'] = next_day_current
+                # break
                 # 股票代码
                 symbol_dic['symbol'] = symbol
                 # 股票名称
@@ -182,6 +180,18 @@ class XueQiu(object):
         except:
             print('default')
 
+    def error_loop(self):
+        count = 0
+        while True:
+            print('轮流 %d 转'%count)
+            page,symbol = self._error_task_queue.get()
+            print(page)
+            print(symbol)
+            # for page,symbol in error_li:
+            self.sned_req(symbol,page)
+            time.sleep(2)
+            count += 1
+
     def run1(self,start):
         for i in range(start,300741):
             symbol = 'SZ'+str(i)
@@ -189,8 +199,10 @@ class XueQiu(object):
             print('股票代码: %s'%symbol)
             for page in range(1,25):
                 print('第 %d 页'%page)
-                time.sleep(1)
+                # time.sleep(1)
                 self.sned_req(symbol,page)
+                time.sleep(1)
+
     def run2(self,start):
         for i in range(start,300741):
             symbol = 'SZ'+str(i)
@@ -199,6 +211,8 @@ class XueQiu(object):
             for page in range(25,50):
                 print('第 %d 页'%page)
                 self.sned_req(symbol,page)
+                time.sleep(1)
+
     def run3(self,start):
         for i in range(start,300741):
             symbol = 'SZ'+str(i)
@@ -207,6 +221,8 @@ class XueQiu(object):
             for page in range(50,75):
                 print('第 %d 页'%page)
                 self.sned_req(symbol,page)
+                time.sleep(1)
+
     def run4(self,start):
         for i in range(start,300741):
             symbol = 'SZ'+str(i)
@@ -215,9 +231,10 @@ class XueQiu(object):
             for page in range(75,101):
                 print('第 %d 页'%page)
                 self.sned_req(symbol,page)
+                time.sleep(1)
 
     def main(self):
-        start = 300280
+        start = 300325
         t1 = threading.Thread(target=self.run1,args = (start,))
         t1.start()
         t2 = threading.Thread(target=self.run2,args = (start,))
@@ -226,6 +243,9 @@ class XueQiu(object):
         t3.start()
         t4 = threading.Thread(target=self.run4,args = (start,))
         t4.start()
+
+        # t5 = threading.Thread(target=self.error_loop)
+        # t5.start()
 
             # time.sleep(5)
 

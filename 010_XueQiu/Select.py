@@ -20,41 +20,40 @@ class SelectMongo(object):
         today = [i for i in self.collection.find({'symbol':self.symbol,'timestamp':temp})]
         # 当日数据空，循环查找均值
         if today == []:
-            try:
-                 # 开始最大值
-                max_data = {}
-                while True:
-                    if max_data =={}:
-                        for i in self.collection.find({"symbol":self.symbol,"timestamp":{'$gte':temp}}).sort([{"timestamp",1}]):
-                            max_data = i
-                            # print(max_data)
-                            break
-                    else:
+            # try:
+                # 开始最大值
+            max_data = {}
+            while True:
+                if max_data =={}:
+                    for i in self.collection.find({"symbol":self.symbol,"timestamp":{'$gte':temp}}).sort([{"timestamp":1}]):
+                        max_data = i
+                        # print(max_data)
                         break
-                 # 开始最小值
-                min_data = {}
-                while True:
-                    if min_data =={}:
-                        for i in self.collection.find({"symbol":self.symbol,"timestamp":{'$lte':temp}}).sort([{"timestamp",-1}]):
-                            min_data = i
-                            # print(min_data)
-                            break
-                    else:
+                else:
+                    break
+                # 开始最小值
+            min_data = {}
+            while True:
+                if min_data =={}:
+                    for i in self.collection.find({"symbol":self.symbol,"timestamp":{'$lte':temp}}).sort([{"timestamp":-1}]):
+                        min_data = i
+                        # print(min_data)
                         break
-            except Exception as e:
-                print(e)
-                # time.sleep(2)
-                self.today = False
-                return self.today
-            else:
+                else:
+                    break
+        # except Exception as e:
+            # print(e)
+            # time.sleep(2)
+            # self.today = False
+            # return self.today
+            # else:
             # 均价
-                avg_current = (max_data['current'] + min_data['current'])/2
-                self.today = min_data
-                self.today['current'] = avg_current
-                self.today['timestamp'] = self.timestamp
-                self.today['next_day_current'] = max_data['current']
-
-                return self.today
+            avg_current = (max_data['current'] + min_data['current'])/2
+            self.today = min_data
+            self.today['current'] = avg_current
+            self.today['timestamp'] = self.timestamp
+            self.today['next_day_current'] = max_data['current']
+            return self.today
 
         # 当日有数据，
         else:
@@ -79,8 +78,8 @@ class SelectMongo(object):
         return data
 
 if __name__=="__main__":
-    symbol = 'SZ300001'
-    timestamp = '2017-09-05'
+    symbol = 'SZ300318'
+    timestamp = '2016-10-25'
     timestamp = datetime.strptime(timestamp,'%Y-%m-%d')
     sm = SelectMongo(symbol,timestamp)
     a = sm.main()
