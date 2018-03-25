@@ -164,12 +164,12 @@ class XueQiu(object):
                 sign = self.hash_to_md5(sign_str)
 
                 symbol_dic['sign'] = sign
-
-                if [i for i in self.collection.find({'sign':sign})] != []:
-                    break
             except Exception as e:
                 print(e)
             else:
+                if [i for i in self.collection.find({'sign':sign})] != []:
+                    time.sleep(3)
+                    break
                 # print(symbol_li)
                 self.save_to_mongo(symbol_li)
 
@@ -211,7 +211,7 @@ class XueQiu(object):
             for page in range(25,50):
                 print('第 %d 页'%page)
                 self.sned_req(symbol,page)
-                time.sleep(1)
+                # time.sleep(1)
 
     def run3(self,start):
         for i in range(start,300741):
@@ -221,7 +221,7 @@ class XueQiu(object):
             for page in range(50,75):
                 print('第 %d 页'%page)
                 self.sned_req(symbol,page)
-                time.sleep(1)
+                # time.sleep(1)
 
     def run4(self,start):
         for i in range(start,300741):
@@ -231,10 +231,10 @@ class XueQiu(object):
             for page in range(75,101):
                 print('第 %d 页'%page)
                 self.sned_req(symbol,page)
-                time.sleep(1)
+                # time.sleep(1)
 
     def main(self):
-        start = 300325
+        start = 300195
         t1 = threading.Thread(target=self.run1,args = (start,))
         t1.start()
         t2 = threading.Thread(target=self.run2,args = (start,))
