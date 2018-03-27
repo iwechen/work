@@ -11,7 +11,7 @@ class ChangeCsv(object):
         self.card_list = []
 
     def find_mongo(self):
-        card_list = [i for i in self.collections.find({'symbol':'SZ300001'})]
+        card_list = [i for i in self.collections.find()]
         self.card_list = card_list
         # print(self.card_list)
 

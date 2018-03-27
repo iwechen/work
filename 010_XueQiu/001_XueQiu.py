@@ -114,7 +114,7 @@ class XueQiu(object):
                 timestamp = str(timestamp)[:10]
                 time_local = time.localtime(int(timestamp))
                 timestamp = time.strftime("%Y-%m-%d",time_local)
-                if (timestamp == '2018-03-16')or(timestamp == '2018-03-17')or(timestamp == '2018-03-18')or(timestamp == '2018-03-19')or(timestamp == '2018-03-20')or(timestamp == '2018-03-21')or(timestamp == '2018-03-22')or(timestamp == '2018-03-23')or(timestamp == '2018-03-24'):
+                if (timestamp == '2018-03-16')or(timestamp == '2018-03-17')or(timestamp == '2018-03-18')or(timestamp == '2018-03-19')or(timestamp == '2018-03-20')or(timestamp == '2018-03-21')or(timestamp == '2018-03-22')or(timestamp == '2018-03-23')or(timestamp == '2018-03-24')or(timestamp == '2018-03-25')or(timestamp == '2018-03-26'):
                     continue
 
                 symbol_dic['timestamp'] = timestamp
@@ -234,7 +234,7 @@ class XueQiu(object):
                 # time.sleep(1)
 
     def main(self):
-        start = 300195
+        start = 300491
         t1 = threading.Thread(target=self.run1,args = (start,))
         t1.start()
         t2 = threading.Thread(target=self.run2,args = (start,))
