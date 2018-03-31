@@ -12,6 +12,7 @@ pymongo = "*"
 mongoengine = "*"
 selenium = "*"
 lxml = "*"
+"autopep8" = "*"
 
 
 [dev-packages]
