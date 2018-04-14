@@ -30,8 +30,8 @@ class GucciSpider(object):
             '_':int((time.time()*1000))
         }
         url = 'https://www.gucci.cn/zh/itemList'
-        proxies = {'http':'http://120.77.35.48:8899'}
-        response = requests.get(url = url, proxies=proxies,params = params,headers=self.headers).content.decode('utf-8')
+        # proxies = {'http':'http://120.77.35.48:8899'}
+        response = requests.get(url = url,params = params,headers=self.headers).content.decode('utf-8')
         return response
 
     def load_page_url(self,url):
@@ -66,8 +66,8 @@ class GucciSpider(object):
             print('%s->%s->%s'%(image_dict['type2'],image_dict['type2'],image_dict['file_name']))
             name = 1
             for url in image_dict['image_li']:
-                proxies = {'http':'http://120.77.35.48:8899'}
-                image = requests.get(url = url,proxies=proxies,headers = self.headers).content
+                # proxies = {'http':'http://120.77.35.48:8899'}
+                image = requests.get(url = url,headers = self.headers).content
                 # time.sleep(1)
                 path = '/Users/chenwei/Desktop/Gucci/男士/'+image_dict['type1']+'/'+image_dict['type2']+'/'+'/'+image_dict['file_name']
                 # print(path)
@@ -91,11 +91,29 @@ class GucciSpider(object):
         t4.start()
         t5 = threading.Thread(target=self.download_image)
         t5.start()
+        t6 = threading.Thread(target=self.download_image)
+        t6.start()
 
     def run(self):
         # 女士
         self.init()
         _task_nid = {
+            'bags':[
+                ["ophidia",205],
+                ["messenger",52],
+                ["backpacks",53],
+                ["belt-bags",203],
+                ["totes",54],
+                ["pouches-bags",212],
+                ["briefcases",55],
+                ["suitcases-duffle-bags",56]
+                ],
+            # 'accessories':[
+            #     # ['wallets-small-accessories',63],
+            #     ['belts',64]
+            # ]
+        }
+        # _task_nid = {
             # 'handbags':[
             #     ["ophidia",199],
             #     ["top-handles",27],
@@ -105,27 +123,11 @@ class GucciSpider(object):
             #     ["belt-bags",31],
             #     ["mini-bags",32]
             #     ],
-            'accessories':[
-                ['wallets-small-accessories',63],
-                # ['wallets-small-accessories',40],
-                ['belts',64]
-            ]
-        }
-        # _task_nid = {
-        #     'handbags':[
-        #         ["ophidia",199],
-        #         ["top-handles",27],
-        #         ["totes",28],
-        #         ["shoulder-bags",29],
-        #         ["backpacks",30],
-        #         ["belt-bags",31],
-        #         ["mini-bags",32]
-        #         ],
-        #     'accessories':[
-        #         ['luggage-lifestyle-bags',39],
-        #         ['wallets-small-accessories',40],
-        #         ['belts',41]
-        #     ]
+            # 'accessories':[
+            #     ['luggage-lifestyle-bags',39],
+            #     ['wallets-small-accessories',40],
+            #     ['belts',41]
+            # ]
         # }
         for type1,type_li in _task_nid.items():
             for types in type_li:
@@ -137,9 +139,15 @@ class GucciSpider(object):
                 while self.flag:
                     # print(page)
                     response = self.load_page(nid,page)
+                    # print(len(response))
+                    if len(response)<20:
+                        self.flag = False
+                        break
                     try:
                         html = etree.HTML(response)
                         goods_li = ['https://www.gucci.cn' +i for i in html.xpath('//li/div[1]/div[1]/a[1]/@href')]
+
+                        # print(len(goods_li))
                     except Exception as e:
                         print(e)
                     else:
@@ -148,12 +156,10 @@ class GucciSpider(object):
                             task_dic['type1'] = type1
                             task_dic['type2'] = type2
                             task_dic['goods_url'] = goods_url
-                            # print(task_dic)
                             self._task_url_queue.put(task_dic)
-                        if len(goods_li)<24:
-                            self.flag = False
-                            break
+                        # print(1111)
                         page += 1
+                        continue
                     break
 
     def main(self):

@@ -13,6 +13,7 @@ mongoengine = "*"
 selenium = "*"
 lxml = "*"
 "autopep8" = "*"
+sqlalchemy = "*"
 
 
 [dev-packages]

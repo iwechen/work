@@ -11,14 +11,14 @@ class ChangeCsv(object):
         self.card_list = []
 
     def find_mongo(self):
-        card_list = [i for i in self.collections.find({'symbol':'SZ300002'})]
+        card_list = [i for i in self.collections.find({'symbol':'SZ300010'})]
         self.card_list = card_list
         # print(self.card_list)
 
     def save_to_csv(self):
         '''保存到csv文件'''
         # # print(card_list)
-        with open("SZ300002.csv", "w") as csv_file:
+        with open("SZ3000010.csv", "w") as csv_file:
             # 创建csv文件的读写对象
             csv_wirter = csv.writer(csv_file)
             # 包cd 含所有表头数据的列表 []
