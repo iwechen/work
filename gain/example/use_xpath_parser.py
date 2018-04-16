@@ -2,15 +2,15 @@ from gain import Css, Item, Parser, XPathParser, Spider
 
 
 class Post(Item):
-    # title = Css('.breadcrumb_last')
-    t = Css('div')
+    title = Css('.breadcrumb_last')
+
     async def save(self):
-        print(self.t)
+        print(self.title)
 
 
 class MySpider(Spider):
     start_url = 'https://mydramatime.com/europe-and-us-drama/'
-    concurrency = 10
+    concurrency = 5
     headers = {'User-Agent': 'Google Spider'}
     parsers = [
                XPathParser('//span[@class="category-name"]/a/@href'),

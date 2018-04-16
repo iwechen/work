@@ -29,7 +29,7 @@ class FootBall(object):
         for i in a.values():
             print(i)
     def mouse_zd(self):
-        url = 'http://s.390ko.net:3389/odds_new/mouse_zd/397/11486/11486716'
+        url = 'http://s.390ko.net:3389/odds_new/mouse_zd/397/11500/11500092'
         params = {'d':str(int((time.time())*1000))}
         response = requests.get(url=url,params=params,headers=self.headers).content.decode('utf-8')
         # print(response)
