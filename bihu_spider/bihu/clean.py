@@ -29,12 +29,12 @@ class BihuClean(object):
             for i in self.collection.find({'id':aid}):
                 _id = i['_id']
                 content = i['content']
-                contents = re.sub(r'\n','',content)
+                contents = re.sub(r'\n','<br>',content)
                 contents = re.sub(r'class=\".*?\"','',contents)
                 contents = re.sub(r'style=\".*?\"|style=\'.*?\'','',contents)
                 contents = re.sub(r'<p></p>','',contents)
                 contents = re.sub(r'&nbsp;','',contents)
-                contents = re.sub(r'<br >|<br>|\?x-oss-process=style/size_lg','',contents)
+                contents = re.sub(r'\?x-oss-process=style/size_lg','',contents)
                 contents = re.sub(r'<span ></span>','',contents)
                 contents = re.sub(r'<p ></p>|<p></p>|<o:p></o:p>','',contents)
                 contents = re.sub(r'lang=\".*?\"','',contents)
@@ -43,9 +43,15 @@ class BihuClean(object):
 
                 self.collection.update({'_id':_id}, {'$set':{'content':contents}})
                 logger.info('%s clean successful!!!',aid)
-                print(contents)
+                # print(contents)
         except Exception as e:
             logger.warn(e)
+        try:
+            for i in self.collection.find({'id':aid})[0]:
+                print(i)
+        except Exception as e:
+            print(e)
+
 
     def run(self,aid):
         self._read(aid)
@@ -53,8 +59,10 @@ class BihuClean(object):
     def main(self):
         for i in self.collection.find():
             aid = i['id']
+            aid = 23456
             # print(aid)
             self.run(aid)
+            time.sleep(100000)
 
 if __name__=='__main__':
     clean = BihuClean()
